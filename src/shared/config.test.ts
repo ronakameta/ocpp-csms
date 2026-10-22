@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConfigError, loadConfig } from './config.js';
+import { ConfigError, configWarnings, loadConfig } from './config.js';
 
 // The smallest environment that passes: only the required variables.
 const validEnv = {
@@ -53,5 +53,22 @@ describe('loadConfig', () => {
 
   it('returns a frozen object', () => {
     expect(Object.isFrozen(loadConfig(validEnv))).toBe(true);
+  });
+});
+
+describe('configWarnings', () => {
+  it('warns about debug logging in production', () => {
+    const config = loadConfig({ ...validEnv, NODE_ENV: 'production', LOG_LEVEL: 'debug' });
+    expect(configWarnings(config)).toEqual([expect.stringMatching(/LOG_LEVEL/)]);
+  });
+
+  it('allows debug logging outside production', () => {
+    const config = loadConfig({ ...validEnv, NODE_ENV: 'development', LOG_LEVEL: 'debug' });
+    expect(configWarnings(config)).toEqual([]);
+  });
+
+  it('has no warnings for normal production settings', () => {
+    const config = loadConfig({ ...validEnv, NODE_ENV: 'production' });
+    expect(configWarnings(config)).toEqual([]);
   });
 });

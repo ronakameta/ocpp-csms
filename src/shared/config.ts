@@ -80,6 +80,23 @@ export function loadConfig(env: NodeJS.ProcessEnv): Config {
   });
 }
 
+// Valid but risky settings: the app still starts, but the caller should log these.
+// Returned as data (not logged here) because the logger depends on this file.
+export function configWarnings(config: Config): string[] {
+  const warnings: string[] = [];
+
+  if (
+    config.nodeEnv === 'production' &&
+    (config.logLevel === 'debug' || config.logLevel === 'trace')
+  ) {
+    warnings.push(
+      `LOG_LEVEL is "${config.logLevel}" in production: logs will be large and may contain sensitive detail.`,
+    );
+  }
+
+  return warnings;
+}
+
 // 4. The one place that touches the real environment.
 //
 // On bad config we print every problem and exit with code 1 (fail fast).
